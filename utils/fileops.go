@@ -27,18 +27,16 @@ func getCurrentUserBashHistoryPath() (string, error) {
 	return historyFilePath, nil
 }
 
-func GetFileConcurrent(buffsize int) ([]string, error) {
-	output := make([]string, 0)
-
+func GetFileConcurrent(buffsize int) (map[int]string, error) {
 	historyFilePath, err := getCurrentUserBashHistoryPath()
 	if err != nil {
 		fmt.Errorf("Error finding bash_history path", err)
-		return output, err
+		return make(map[int]string), err
 	}
 	file, err := os.Open(historyFilePath)
 	if err != nil {
 		fmt.Errorf("Error opening file", err)
-		return output, err
+		return make(map[int]string), err
 	}
 
 	defer file.Close()
@@ -46,7 +44,7 @@ func GetFileConcurrent(buffsize int) ([]string, error) {
 	fileinfo, err := file.Stat()
 	if err != nil {
 		fmt.Errorf("Error stating file. Check permissions", err)
-		return output, err
+		return make(map[int]string), err
 	}
 
 	filesize := int(fileinfo.Size())
@@ -56,12 +54,10 @@ func GetFileConcurrent(buffsize int) ([]string, error) {
 	maplen := concurrency + 1
 
 	var mutex = &sync.RWMutex{}
-	var m map[int]string
-	m = make(map[int]string, maplen)
+	var output map[int]string
+	output = make(map[int]string, maplen)
 
-	// All buffer sizes are the same in the normal case. Offsets depend on the
-	// index. Second go routine should start at 100, for example, given our
-	// buffer size of 100.
+	// Confiuge offsets
 	for i := 0; i < concurrency; i++ {
 		chunksizes[i].bufsize = buffsize
 		chunksizes[i].offset = int64(buffsize * i)
@@ -90,14 +86,14 @@ func GetFileConcurrent(buffsize int) ([]string, error) {
 				return
 			}
 			mutex.Lock()
-			m[i] = string(buffer[:bytesread])
+			output[i] = string(buffer[:bytesread])
 			mutex.Unlock()
-			output = append(output, string(buffer[:bytesread]))
+			//output = append(output, string(buffer[:bytesread]))
 		}(chunksizes, i)
 	}
 
 	wg.Wait()
-	fmt.Println(m)
+	//fmt.Println(m)
 
 	return output, nil
 }
