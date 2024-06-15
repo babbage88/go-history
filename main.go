@@ -17,8 +17,9 @@ func main() {
 		os.Exit(1)
 	}
 	elapsed := time.Since(start)
-	fmt.Printf("page took %s\n", elapsed)
-	last := len(history) - 2
-	fmt.Println(history[last])
+
+	fmt.Println(history)
 	//fmt.Println(len(history))
+
+	fmt.Printf("page took %s\n", elapsed)
 }
