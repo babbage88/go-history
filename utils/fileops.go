@@ -1,11 +1,13 @@
 package fileops
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -145,4 +147,73 @@ func GetBashHistory() (string, error) {
 	}
 
 	return string(content), nil
+}
+
+func ScanFileByLine() ([]string, error) {
+	output := make([]string, 0)
+	historyFilePath, err := getCurrentUserBashHistoryPath()
+	if err != nil {
+		return output, err
+	}
+	file, err := os.Open(historyFilePath)
+	if err != nil {
+		fmt.Println(err)
+		return output, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	// This is our buffer now
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	fmt.Println("read lines:")
+	for _, line := range lines {
+		output = append(output, line)
+	}
+
+	return output, nil
+}
+
+func SearchByLine(search string) ([]string, error) {
+	output := make([]string, 0)
+	counter := 0
+	historyFilePath, err := getCurrentUserBashHistoryPath()
+	if err != nil {
+		return output, err
+	}
+	file, err := os.Open(historyFilePath)
+	if err != nil {
+		fmt.Println(err)
+		return output, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	// This is our buffer now
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	fmt.Println("read lines:")
+	for _, line := range lines {
+		searchFor := strings.Contains(line, search)
+		if searchFor {
+			output = append(output, line)
+			counter++
+		}
+
+	}
+	fmt.Printf("Found %d entries for in bash_history: %s\n", counter, search)
+	fmt.Printf("%s\n", output)
+	return output, nil
 }
