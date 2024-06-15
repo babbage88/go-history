@@ -53,6 +53,11 @@ func GetFileConcurrent(buffsize int) ([]string, error) {
 	// Number of go routines we need to spawn.
 	concurrency := filesize / buffsize
 	chunksizes := make([]chunk, concurrency)
+	maplen := concurrency + 1
+
+	var mutex = &sync.RWMutex{}
+	var m map[int]string
+	m = make(map[int]string, maplen)
 
 	// All buffer sizes are the same in the normal case. Offsets depend on the
 	// index. Second go routine should start at 100, for example, given our
@@ -84,12 +89,15 @@ func GetFileConcurrent(buffsize int) ([]string, error) {
 				fmt.Println(err)
 				return
 			}
-
+			mutex.Lock()
+			m[i] = string(buffer[:bytesread])
+			mutex.Unlock()
 			output = append(output, string(buffer[:bytesread]))
 		}(chunksizes, i)
 	}
 
 	wg.Wait()
+	fmt.Println(m)
 
 	return output, nil
 }
