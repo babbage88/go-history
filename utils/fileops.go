@@ -213,7 +213,10 @@ func SearchByLine(search string) ([]string, error) {
 		}
 
 	}
+
 	fmt.Printf("Found %d entries for in bash_history: %s\n", counter, search)
-	fmt.Printf("%s\n", output)
+	for _, str := range output {
+		fmt.Println(str)
+	}
 	return output, nil
 }
