@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,6 +26,7 @@ type CommandHistoryEntry struct {
 	DateExecuted time.Time `json:"dateExecuted"`
 	BaseCommand  string    `json:"baseCommand"`
 	SubCommand   []string  `json:"subCommand"`
+	LineNumber   int64     `json:"lineNumber"`
 }
 
 func getCurrentUserBashHistoryPath() (string, error) {
@@ -190,7 +193,8 @@ func ScanFileByLine() ([]string, error) {
 	return output, nil
 }
 
-func SearchByLine(search string) ([]string, error) {
+func SearchByLine(search string, useRegex bool) ([]string, error) {
+	var searchFor bool
 	output := make([]string, 0)
 	counter := 0
 	historyFilePath, err := getCurrentUserBashHistoryPath()
@@ -226,7 +230,12 @@ func SearchByLine(search string) ([]string, error) {
 			fmt.Println(timeholder)
 		}
 
-		searchFor := strings.Contains(line, search)
+		if useRegex {
+			searchFor = regExStringSearch(search, line)
+		} else {
+			searchFor = strings.Contains(line, search)
+		}
+
 		if searchFor {
 			output = append(output, line)
 			counter++
@@ -242,17 +251,18 @@ func SearchByLine(search string) ([]string, error) {
 	return output, nil
 }
 
-func SearchCmdHistory(search string) ([]CommandHistoryEntry, error) {
-
+func SearchCmdHistory(search string, useRegex bool) ([]CommandHistoryEntry, error) {
+	var searchFor bool
+	var lineCounter int64
 	output := make([]CommandHistoryEntry, 0)
-	counter := 0
+
 	historyFilePath, err := getCurrentUserBashHistoryPath()
 	if err != nil {
 		return output, err
 	}
 	file, err := os.Open(historyFilePath)
 	if err != nil {
-		fmt.Println(err)
+		slog.Error("Error opening file: ", err)
 		return output, err
 	}
 	defer file.Close()
@@ -268,14 +278,21 @@ func SearchCmdHistory(search string) ([]CommandHistoryEntry, error) {
 	}
 
 	previousLine := ""
+	lineCounter = 0
+
 	for _, line := range lines {
 
 		if strings.Index(line, "#") == 0 {
 			previousLine = line
+			lineCounter++
 			continue
 		}
 
-		searchFor := strings.Contains(line, search)
+		if useRegex {
+			searchFor = regExStringSearch(search, line)
+		} else {
+			searchFor = strings.Contains(line, search)
+		}
 
 		if searchFor {
 			words := strings.Fields(line)
@@ -292,17 +309,19 @@ func SearchCmdHistory(search string) ([]CommandHistoryEntry, error) {
 				DateExecuted: timeholder,
 				BaseCommand:  words[0],
 				SubCommand:   words[1:],
+				LineNumber:   lineCounter,
 			}
 			output = append(output, cmdEntry)
-			counter++
+
 		}
-
 	}
-
-	fmt.Printf("Found %d entries for in bash_history: %s\n", counter, search)
-	for _, str := range output {
-		fmt.Println(str)
-	}
-
 	return output, nil
+}
+
+func regExStringSearch(pattern string, str string) bool {
+	ret, err := regexp.MatchString(pattern, str)
+	if err != nil {
+		fmt.Errorf("Error with regex search", err)
+	}
+	return ret
 }
