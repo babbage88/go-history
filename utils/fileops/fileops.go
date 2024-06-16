@@ -7,13 +7,23 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	type_helper "github.com/babbage88/go-history/utils/type_helper"
 )
 
 type chunk struct {
 	bufsize int
 	offset  int64
+}
+
+type CommandHistoryEntry struct {
+	DateExecuted time.Time `json:"dateExecuted"`
+	BaseCommand  string    `json:"baseCommand"`
+	SubCommand   []string  `json:"subCommand"`
 }
 
 func getCurrentUserBashHistoryPath() (string, error) {
@@ -204,8 +214,18 @@ func SearchByLine(search string) ([]string, error) {
 		lines = append(lines, scanner.Text())
 	}
 
-	fmt.Println("read lines:")
+	var timeholder string
 	for _, line := range lines {
+		if strings.Index(line, "#") == 0 {
+			trmline := strings.TrimPrefix(line, "#")
+			intline, err := strconv.ParseInt(trmline, 10, 64)
+			if err != nil {
+				fmt.Errorf("Error parsing time value", err)
+			}
+			timeholder = time.Unix(intline, 0).Format("2006-1-2 15:4:5")
+			fmt.Println(timeholder)
+		}
+
 		searchFor := strings.Contains(line, search)
 		if searchFor {
 			output = append(output, line)
@@ -218,5 +238,71 @@ func SearchByLine(search string) ([]string, error) {
 	for _, str := range output {
 		fmt.Println(str)
 	}
+
+	return output, nil
+}
+
+func SearchCmdHistory(search string) ([]CommandHistoryEntry, error) {
+
+	output := make([]CommandHistoryEntry, 0)
+	counter := 0
+	historyFilePath, err := getCurrentUserBashHistoryPath()
+	if err != nil {
+		return output, err
+	}
+	file, err := os.Open(historyFilePath)
+	if err != nil {
+		fmt.Println(err)
+		return output, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	// This is our buffer now
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	previousLine := ""
+	for _, line := range lines {
+
+		if strings.Index(line, "#") == 0 {
+			previousLine = line
+			continue
+		}
+
+		searchFor := strings.Contains(line, search)
+
+		if searchFor {
+			words := strings.Fields(line)
+			var numsec int64
+			timeholder := time.Unix(0, 0)
+			numsec = 0
+
+			if strings.HasPrefix(previousLine, "#") {
+				strnumsec := strings.TrimPrefix(previousLine, "#")
+				numsec = type_helper.Int64Parser(strnumsec)
+				timeholder = time.Unix(numsec, 0)
+			}
+			cmdEntry := CommandHistoryEntry{
+				DateExecuted: timeholder,
+				BaseCommand:  words[0],
+				SubCommand:   words[1:],
+			}
+			output = append(output, cmdEntry)
+			counter++
+		}
+
+	}
+
+	fmt.Printf("Found %d entries for in bash_history: %s\n", counter, search)
+	for _, str := range output {
+		fmt.Println(str)
+	}
+
 	return output, nil
 }
