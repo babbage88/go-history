@@ -278,13 +278,11 @@ func SearchCmdHistory(search string, useRegex bool) ([]CommandHistoryEntry, erro
 		lines = append(lines, scanner.Text())
 	}
 
-	previousLine := ""
 	lineCounter = 0
 
-	for _, line := range lines {
+	for index, line := range lines {
 
 		if strings.Index(line, "#") == 0 {
-			previousLine = line
 			lineCounter++
 			continue
 		}
@@ -296,15 +294,22 @@ func SearchCmdHistory(search string, useRegex bool) ([]CommandHistoryEntry, erro
 		}
 
 		if searchFor {
+			chkInd := index > 0
+
 			words := strings.Fields(line)
 			var numsec int64
 			timeholder := time.Unix(0, 0)
 			numsec = 0
 
-			if strings.HasPrefix(previousLine, "#") {
-				strnumsec := strings.TrimPrefix(previousLine, "#")
-				numsec = type_helper.Int64Parser(strnumsec)
-				timeholder = time.Unix(numsec, 0)
+			if chkInd {
+				prevIndex := index - 1
+				previousLine := lines[prevIndex]
+
+				if strings.HasPrefix(previousLine, "#") {
+					strnumsec := strings.TrimPrefix(previousLine, "#")
+					numsec = type_helper.Int64Parser(strnumsec)
+					timeholder = time.Unix(numsec, 0)
+				}
 			}
 			cmdEntry := CommandHistoryEntry{
 				DateExecuted: timeholder,
