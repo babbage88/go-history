@@ -45,7 +45,7 @@ func main() {
 	for index, line := range retval {
 		fmt.Printf("Index: %d\n", index)
 		fmt.Printf("%d ", line.LineNumber)
-		fmt.Printf("%s ", line.DateExecuted.Format("2000-1-2 12:34:56 "))
+		fmt.Printf("%s ", line.DateExecuted.Format("2006-1-2 15:04:05 "))
 		fmt.Printf("%s ", line.BaseCommand)
 		fmt.Printf("%s \n", line.SubCommand)
 
