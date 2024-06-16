@@ -11,6 +11,7 @@ import (
 
 func testStruct(srch *string, reg *bool) ([]fileops.CommandHistoryEntry, int, time.Duration) {
 	start := time.Now()
+	defer fmt.Printf("Testing test: %v\n", *srch)
 	scanhistory, err := fileops.SearchCmdHistory(*srch, *reg)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -43,6 +44,12 @@ func main() {
 	retval, count, duration := testStruct(searchPtr, regExPtr)
 
 	for index, line := range retval {
+		var previous fileops.CommandHistoryEntry
+		if index > 1 {
+			previous = retval[index-1]
+		}
+
+		fmt.Printf("Previous Entry: Line: %d, BaseCommand: %s\n", previous.LineNumber, previous.BaseCommand)
 		fmt.Printf("Index: %d\n", index)
 		fmt.Printf("%d ", line.LineNumber)
 		fmt.Printf("%s ", line.DateExecuted.Format("2006-1-2 15:04:05 "))

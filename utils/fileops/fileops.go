@@ -218,7 +218,6 @@ func SearchByLine(search string, useRegex bool) ([]string, error) {
 		lines = append(lines, scanner.Text())
 	}
 
-	var timeholder string
 	for _, line := range lines {
 		if strings.Index(line, "#") == 0 {
 			trmline := strings.TrimPrefix(line, "#")
@@ -226,8 +225,8 @@ func SearchByLine(search string, useRegex bool) ([]string, error) {
 			if err != nil {
 				fmt.Errorf("Error parsing time value", err)
 			}
-			timeholder = time.Unix(intline, 0).Format("2006-1-2 15:4:5")
-			fmt.Println(timeholder)
+			time.Unix(intline, 0).Format("2006-1-2 15:4:5")
+			//fmt.Println(timeholder)
 		}
 
 		if useRegex {
@@ -244,9 +243,11 @@ func SearchByLine(search string, useRegex bool) ([]string, error) {
 	}
 
 	fmt.Printf("Found %d entries for in bash_history: %s\n", counter, search)
-	for _, str := range output {
-		fmt.Println(str)
-	}
+	/*
+		for _, str := range output {
+			fmt.Println(str)
+		}
+	*/
 
 	return output, nil
 }
@@ -312,6 +313,7 @@ func SearchCmdHistory(search string, useRegex bool) ([]CommandHistoryEntry, erro
 				LineNumber:   lineCounter,
 			}
 			output = append(output, cmdEntry)
+			lineCounter++
 
 		}
 	}
