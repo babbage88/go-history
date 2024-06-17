@@ -252,7 +252,7 @@ func SearchByLine(search string, useRegex bool) ([]string, error) {
 	return output, nil
 }
 
-func SearchCmdHistory(search string, useRegex bool) ([]CommandHistoryEntry, error) {
+func GetCmdHistory(search string, useRegex bool) ([]CommandHistoryEntry, error) {
 	var searchFor bool
 	var lineCounter int64
 	output := make([]CommandHistoryEntry, 0)
@@ -277,6 +277,8 @@ func SearchCmdHistory(search string, useRegex bool) ([]CommandHistoryEntry, erro
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
+	outputlen := make([]CommandHistoryEntry, 0, len(lines))
+	output = append(output, outputlen...)
 
 	lineCounter = 0
 

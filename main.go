@@ -12,7 +12,7 @@ import (
 func testStruct(srch *string, reg *bool) ([]fileops.CommandHistoryEntry, int, time.Duration) {
 	start := time.Now()
 	defer fmt.Printf("Testing test: %v\n", *srch)
-	scanhistory, err := fileops.SearchCmdHistory(*srch, *reg)
+	scanhistory, err := fileops.GetCmdHistory(*srch, *reg)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
@@ -40,7 +40,7 @@ func main() {
 
 	flag.Parse()
 
-	_, countst, durationst := testString(searchPtr, regExPtr)
+	//_, countst, durationst := testString(searchPtr, regExPtr)
 	retval, count, duration := testStruct(searchPtr, regExPtr)
 
 	for index, line := range retval {
@@ -60,7 +60,7 @@ func main() {
 
 	defer fmt.Printf("search for %s struct returned took %s returning %d records\n", *searchPtr, duration, count)
 
-	defer fmt.Printf("search for %s with string returned took %s returning %d records\n", *searchPtr, durationst, countst)
+	//defer fmt.Printf("search for %s with string returned took %s returning %d records\n", *searchPtr, durationst, countst)
 
 	//fmt.Println(len(history))
 
