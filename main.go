@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"time"
@@ -56,39 +55,26 @@ func testString(srch *string, reg *bool) ([]string, int, time.Duration) {
 }
 
 func main() {
-	searchPtr := flag.String("srch", ".", "Regex ecpression to search ~/.bash_history")
-	regExPtr := flag.Bool("usereg", false, "Use a regex expressiong for search pattern, can hurt performance.")
 
-	flag.Parse()
+	//searchPtr := flag.String("srch", ".", "Regex ecpression to search ~/.bash_history")
+	//regExPtr := flag.Bool("usereg", false, "Use a regex expressiong for search pattern, can hurt performance.")
+
+	//flag.Parse()
 
 	//_, countst, durationst := testString(searchPtr, regExPtr)
-	retval, count, duration := testStruct(searchPtr, regExPtr)
-	fmt.Println(retval)
-	database.InsertCommandHistoryEntries(retval)
+	//retval, count, duration := testStruct(searchPtr, regExPtr)
+	//fmt.Println(retval)
 
-	/*
-		for index, line := range retval {
-			var previous fileops.CommandHistoryEntry
-			if index > 1 {
-				previous = retval[index-1]
-			}
-
-			fmt.Printf("Previous Entry: Line: %d, BaseCommand: %s\n", previous.LineNumber, previous.BaseCommand)
-			fmt.Printf("Index: %d\n", index)
-			fmt.Printf("%d ", line.LineNumber)
-			fmt.Printf("%s ", line.DateExecuted.Format("2006-1-2 15:04:05 "))
-			fmt.Printf("%s ", line.BaseCommand)
-			fmt.Printf("%s \n", line.SubCommand)
-
-		}
-	*/
-
-	defer fmt.Printf("search for %s struct returned took %s returning %d records\n", *searchPtr, duration, count)
+	//defer fmt.Printf("se %s struct returned took %s returning %d records\n", *searchPtr, duration, count)
 	dbsql := database.NewDatabaseConnection()
-	database.InitializeDbConnection(dbsql)
+	db, _ := database.InitializeDbConnection(dbsql)
+	//database.InsertCommandHistoryEntries(db, retval)
+	start := time.Now()
+	testget, _ := database.GetAllCmdHistory(db)
+	elapsed := time.Since(start)
+	defer fmt.Printf("The SQL lite query from GetAllCmHistory(db) took %s to complete.", elapsed)
 
+	//fmt.Printf("%v\n", testget)
+	fmt.Printf("%d\n", len(testget))
 	//defer fmt.Printf("search for %s with string returned took %s returning %d records\n", *searchPtr, durationst, countst)
-
-	//fmt.Println(len(history))
-
 }

@@ -15,11 +15,12 @@ import (
 )
 
 type CommandHistoryDbEntry struct {
-	Id           int64     `json:"id"`
-	DateExecuted time.Time `json:"date_executed"`
-	BaseCommand  string    `json:"base_ommand"`
-	SubCommand   []string  `json:"sub_command"`
-	LineNumber   int64     `json:"line_number"`
+	Id               int64     `json:"id"`
+	DateExecuted     string    `json:"date_executed"`
+	DateExecutedTime time.Time `json:date_string`
+	BaseCommand      string    `json:"base_ommand"`
+	SubCommand       string    `json:"sub_command"`
+	LineNumber       int64     `json:"line_number"`
 }
 
 type DatabaseConnection struct {
@@ -118,7 +119,7 @@ func WithDbPath(DbPath string) DatabaseConnectionOptions {
 	}
 }
 
-func InsertCommandHistoryEntries(entries []fileops.CommandHistoryEntry) error {
+func InsertCommandHistoryEntries(db *sql.DB, entries []fileops.CommandHistoryEntry) error {
 	if db == nil {
 		return fmt.Errorf("database not initialized")
 	}
@@ -149,6 +150,7 @@ func GetAllCmdHistory(db *sql.DB) ([]CommandHistoryDbEntry, error) {
 	var commands []CommandHistoryDbEntry
 	for rows.Next() {
 		var command CommandHistoryDbEntry
+		//var dateExecutedString string
 
 		if err := rows.Scan(&command.Id,
 			&command.DateExecuted,
@@ -157,7 +159,8 @@ func GetAllCmdHistory(db *sql.DB) ([]CommandHistoryDbEntry, error) {
 			&command.LineNumber); err != nil {
 			slog.Error("Error parsing DB response", slog.String("Error", err.Error()))
 		}
-		slog.Info("Appending DNS Record", slog.String("id", fmt.Sprint(command.Id)), slog.String("base_command:", command.BaseCommand))
+		//command.DateExecuted, _ = time.Parse(time.RFC3339, dateExecutedString)
+		//slog.Info("Appending Commd History Record", slog.String("id", fmt.Sprint(command.Id)), slog.String("base_command:", command.BaseCommand))
 		commands = append(commands, command)
 	}
 
