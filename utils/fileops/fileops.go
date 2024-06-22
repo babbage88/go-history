@@ -29,6 +29,21 @@ type CommandHistoryEntry struct {
 	LineNumber   int64     `json:"lineNumber"`
 }
 
+func GetBashHistoryPath() (string, error) {
+	return getCurrentUserBashHistoryPath()
+}
+
+func GetCurrentUserPath() (string, error) {
+	// Get the current user's home directory
+	currentUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	homeDir := currentUser.HomeDir
+
+	return homeDir, nil
+}
+
 func getCurrentUserBashHistoryPath() (string, error) {
 	// Get the current user's home directory
 	currentUser, err := user.Current()

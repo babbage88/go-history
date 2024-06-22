@@ -6,8 +6,29 @@ import (
 	"os"
 	"time"
 
+	database "github.com/babbage88/go-history/database"
 	fileops "github.com/babbage88/go-history/utils/fileops"
 )
+
+func devDebug(commands []fileops.CommandHistoryEntry, count int, duration time.Duration, srch *string) {
+	//_, countst, durationst := testString(searchPtr, regExPtr)
+
+	for index, line := range commands {
+		var previous fileops.CommandHistoryEntry
+		if index > 1 {
+			previous = commands[index-1]
+		}
+
+		fmt.Printf("Previous Entry: Line: %d, BaseCommand: %s\n", previous.LineNumber, previous.BaseCommand)
+		fmt.Printf("Index: %d\n", index)
+		fmt.Printf("%d ", line.LineNumber)
+		fmt.Printf("%s ", line.DateExecuted.Format("2006-1-2 15:04:05 "))
+		fmt.Printf("%s ", line.BaseCommand)
+		fmt.Printf("%s \n", line.SubCommand)
+
+	}
+	fmt.Printf("search for %s struct returned took %s returning %d records\n", *srch, duration, count)
+}
 
 func testStruct(srch *string, reg *bool) ([]fileops.CommandHistoryEntry, int, time.Duration) {
 	start := time.Now()
@@ -42,23 +63,29 @@ func main() {
 
 	//_, countst, durationst := testString(searchPtr, regExPtr)
 	retval, count, duration := testStruct(searchPtr, regExPtr)
+	fmt.Println(retval)
+	database.InsertCommandHistoryEntries(retval)
 
-	for index, line := range retval {
-		var previous fileops.CommandHistoryEntry
-		if index > 1 {
-			previous = retval[index-1]
+	/*
+		for index, line := range retval {
+			var previous fileops.CommandHistoryEntry
+			if index > 1 {
+				previous = retval[index-1]
+			}
+
+			fmt.Printf("Previous Entry: Line: %d, BaseCommand: %s\n", previous.LineNumber, previous.BaseCommand)
+			fmt.Printf("Index: %d\n", index)
+			fmt.Printf("%d ", line.LineNumber)
+			fmt.Printf("%s ", line.DateExecuted.Format("2006-1-2 15:04:05 "))
+			fmt.Printf("%s ", line.BaseCommand)
+			fmt.Printf("%s \n", line.SubCommand)
+
 		}
-
-		fmt.Printf("Previous Entry: Line: %d, BaseCommand: %s\n", previous.LineNumber, previous.BaseCommand)
-		fmt.Printf("Index: %d\n", index)
-		fmt.Printf("%d ", line.LineNumber)
-		fmt.Printf("%s ", line.DateExecuted.Format("2006-1-2 15:04:05 "))
-		fmt.Printf("%s ", line.BaseCommand)
-		fmt.Printf("%s \n", line.SubCommand)
-
-	}
+	*/
 
 	defer fmt.Printf("search for %s struct returned took %s returning %d records\n", *searchPtr, duration, count)
+	dbsql := database.NewDatabaseConnection()
+	database.InitializeDbConnection(dbsql)
 
 	//defer fmt.Printf("search for %s with string returned took %s returning %d records\n", *searchPtr, durationst, countst)
 
