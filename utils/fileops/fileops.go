@@ -79,31 +79,31 @@ func GetFileConcurrent(buffsize int) (map[int]string, error) {
 
 	filesize := int(fileinfo.Size())
 	// Number of go routines we need to spawn.
-	concurrency := filesize / buffsize
-	chunksizes := make([]chunk, concurrency)
-	maplen := concurrency + 1
+	chunkOffset := filesize / buffsize
+	chunksizes := make([]chunk, chunkOffset)
+	maplen := chunkOffset + 1
 
 	var mutex = &sync.RWMutex{}
 	var output map[int]string
 	output = make(map[int]string, maplen)
 
 	// Confiuge offsets
-	for i := 0; i < concurrency; i++ {
+	for i := 0; i < chunkOffset; i++ {
 		chunksizes[i].bufsize = buffsize
 		chunksizes[i].offset = int64(buffsize * i)
 	}
 
 	// check for any left over bytes. Add one more go routine if required.
 	if remainder := filesize % buffsize; remainder != 0 {
-		c := chunk{bufsize: remainder, offset: int64(concurrency * buffsize)}
-		concurrency++
+		c := chunk{bufsize: remainder, offset: int64(chunkOffset * buffsize)}
+		chunkOffset++
 		chunksizes = append(chunksizes, c)
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(concurrency)
+	wg.Add(chunkOffset)
 
-	for i := 0; i < concurrency; i++ {
+	for i := 0; i < chunkOffset; i++ {
 		go func(chunksizes []chunk, i int) {
 			defer wg.Done()
 
